@@ -1,0 +1,23 @@
+FROM debian
+LABEL repository=https://github.com/cyrus-and/chrome-har-capturer
+
+RUN apt-get update && apt-get install -y \
+  ca-certificates \
+  gnupg \
+  wget \
+  --no-install-recommends \
+  && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+  && apt-get update && apt-get install -y \
+  google-chrome-stable \
+  --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r botrender \
+    && useradd -r -g botrender -G audio,video botrender \
+    && mkdir -p /home/botrender \
+    && chown -R botrender:botrender /home/botrender
+
+USER botrender
+
+ENTRYPOINT ["google-chrome", "--remote-debugging-port=9222", "--remote-debugging-address=0.0.0.0", "--headless", "--disable-gpu"]
